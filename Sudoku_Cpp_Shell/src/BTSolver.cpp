@@ -35,45 +35,45 @@ bool BTSolver::assignmentsCheck ( void )
 // =================================================================
 bool BTSolver::arcConsistency ( void )
 {
-    vector<Variable*> toAssign;
-    vector<Constraint*> RMC = network.getModifiedConstraints();
-    for (int i = 0; i < RMC.size(); ++i)
-    {
-        vector<Variable*> LV = RMC[i]->vars;
-        for (int j = 0; j < LV.size(); ++j)
-        {
-            if(LV[j]->isAssigned())
-            {
-                vector<Variable*> Neighbors = network.getNeighborsOfVariable(LV[j]);
-                int assignedValue = LV[j]->getAssignment();
-                for (int k = 0; k < Neighbors.size(); ++k)
-                {
-                    Domain D = Neighbors[k]->getDomain();
-                    if(D.contains(assignedValue))
-                    {
-                        if (D.size() == 1)
-                            return false;
-                        if (D.size() == 2)
-                            toAssign.push_back(Neighbors[k]);
-                        trail->push(Neighbors[k]);
-                        Neighbors[k]->removeValueFromDomain(assignedValue);
-                    }
-                }
-            }
-        }
-    }
-    if (!toAssign.empty())
-    {
-        for (int i = 0; i < toAssign.size(); ++i)
-        {
-            Domain D = toAssign[i]->getDomain();
-            vector<int> assign = D.getValues();
-            trail->push(toAssign[i]);
-            toAssign[i]->assignValue(assign[0]);
-        }
-        return arcConsistency();
-    }
-    return network.isConsistent();
+	vector<Variable*> toAssign;
+	vector<Constraint*> RMC = network.getModifiedConstraints();
+	for (int i = 0; i < RMC.size(); ++i)
+	{
+		vector<Variable*> LV = RMC[i]->vars;
+		for (int j = 0; j < LV.size(); ++j)
+		{
+			if(LV[j]->isAssigned())
+			{
+				vector<Variable*> Neighbors = network.getNeighborsOfVariable(LV[j]);
+				int assignedValue = LV[j]->getAssignment();
+				for (int k = 0; k < Neighbors.size(); ++k)
+				{
+					Domain D = Neighbors[k]->getDomain();
+					if(D.contains(assignedValue))
+					{
+						if (D.size() == 1)
+							return false;
+						if (D.size() == 2)
+							toAssign.push_back(Neighbors[k]);
+						trail->push(Neighbors[k]);
+						Neighbors[k]->removeValueFromDomain(assignedValue);
+					}
+				}
+			}
+		}
+	}
+	if (!toAssign.empty())
+	{
+		for (int i = 0; i < toAssign.size(); ++i)
+		{
+			Domain D = toAssign[i]->getDomain();
+			vector<int> assign = D.getValues();
+			trail->push(toAssign[i]);
+			toAssign[i]->assignValue(assign[0]);
+		}
+		return arcConsistency();
+	}
+	return network.isConsistent();
 }
 
 /**
@@ -83,7 +83,7 @@ bool BTSolver::arcConsistency ( void )
  * the consistency of the network
  *
  * (1) If a variable is assigned then eliminate that value from
- *     the square's neighbors.
+ *	 the square's neighbors.
  *
  * Note: remember to trail.push variables before you change their domain
  * Return: a pair of a map and a bool. The map contains the pointers to all MODIFIED variables, mapped to their MODIFIED domain. 
@@ -101,19 +101,19 @@ pair<map<Variable*,Domain>,bool> BTSolver::forwardChecking ( void )
  * the consistency of the network
  *
  * (1) If a variable is assigned then eliminate that value from
- *     the square's neighbors.
+ *	 the square's neighbors.
  *
  * (2) If a constraint has only one possible place for a value
- *     then put the value there.
+ *	 then put the value there.
  *
  * Note: remember to trail.push variables before you change their domain
  * Return: a pair of a map and a bool. The map contains the pointers to all variables that were assigned during 
- *         the whole NorvigCheck propagation, and mapped to the values that they were assigned. 
- *         The bool is true if assignment is consistent, false otherwise.
+ *		 the whole NorvigCheck propagation, and mapped to the values that they were assigned. 
+ *		 The bool is true if assignment is consistent, false otherwise.
  */
 pair<map<Variable*,int>,bool> BTSolver::norvigCheck ( void )
 {
-    return make_pair(map<Variable*, int>(), false);
+	return make_pair(map<Variable*, int>(), false);
 }
 
 /**
@@ -149,21 +149,30 @@ Variable* BTSolver::getfirstUnassignedVariable ( void )
  */
 Variable* BTSolver::getMRV ( void )
 {
-    return nullptr;
+	Variable* minVariable = nullptr;
+	for (Variable* var : network.getVariables()) {
+		// confirm var is unassigned
+		if (!(var->isAssigned())) {
+			// update minVar if it's null or if we find a new var with smaller domain
+			if (minVariable == nullptr or var->getDomain().size() < minVariable->getDomain().size())
+				minVariable = var;
+		}
+	}
+	return minVariable;
 }
 
 /**
  * Part 2 TODO: Implement the Minimum Remaining Value Heuristic
- *                with Degree Heuristic as a Tie Breaker
+ *				with Degree Heuristic as a Tie Breaker
  *
  * Return: The unassigned variable with the smallest domain and affecting the most unassigned neighbors.
  * 		   If there are multiple variables that have the same smallest domain with the same number 
  * 		   of unassigned neighbors, add them to the vector of Variables.
- *         If there is only one variable, return the vector of size 1 containing that variable.
+ *		 If there is only one variable, return the vector of size 1 containing that variable.
  */
 vector<Variable*> BTSolver::MRVwithTieBreaker ( void )
 {
-    return vector<Variable*>();
+	return vector<Variable*>();
 }
 
 /**
@@ -196,11 +205,11 @@ vector<int> BTSolver::getValuesInOrder ( Variable* v )
  * values out of it's neighbors domain.
  *
  * Return: A list of v's domain sorted by the LCV heuristic
- *         The LCV is first and the MCV is last
+ *		 The LCV is first and the MCV is last
  */
 vector<int> BTSolver::getValuesLCVOrder ( Variable* v )
 {
-    return vector<int>();
+	return vector<int>();
 }
 
 /**
@@ -223,7 +232,7 @@ int BTSolver::solve ( float time_left)
 	if (time_left <= 60.0)
 		return -1;
 	double elapsed_time = 0.0;
-    clock_t begin_clock = clock();
+	clock_t begin_clock = clock();
 
 	if ( hasSolution )
 		return 0;
@@ -264,7 +273,7 @@ int BTSolver::solve ( float time_left)
 			double new_start_time = time_left - elapsed_time;
 			int check_status = solve(new_start_time);
 			if(check_status == -1) {
-			    return -1;
+				return -1;
 			}
 			
 		}
