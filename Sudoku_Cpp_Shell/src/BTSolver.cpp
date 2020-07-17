@@ -204,12 +204,70 @@ vector<int> BTSolver::getValuesInOrder ( Variable* v )
  * The Least constraining value is the one that will knock the least
  * values out of it's neighbors domain.
  *
+ * Tie Breaker: If the list of values to be returned is [2, 1, 7, 5, 3]
+ * 		 with 7 and 5 affecting the same amount of variables. Then the
+ *		 correct list to be returned is [2, 1, 5, 7, 3].
+ *
  * Return: A list of v's domain sorted by the LCV heuristic
  *		 The LCV is first and the MCV is last
  */
 vector<int> BTSolver::getValuesLCVOrder ( Variable* v )
 {
-	return vector<int>();
+	vector<int> values = v->getDomain().getValues(); // domain values
+	ConstraintNetwork::VariableSet neighbors = network.getNeighborsOfVariable(v);
+
+	map<int,int> process_map; // pair (domain value : affected neighbors count)
+
+	for(int i = 0; i < values.size(); ++i)
+	{ 
+		int check = values[i]; // grab a value from domain of given square
+		int curCount = 0; // count number of neighbors affected for this domain value
+		
+		for(Variable* neighbor : neighbors) // grabs neighbor domain and checks constraints
+		{
+			for(int neiCheck : neighbor->getDomain().getValues())
+			{
+				if(check == neiCheck) // neighbor has current domain in its domain
+					++curCount;
+			}
+			process_map[check] = process_map[check] + curCount; // increment affected neighbors count for this domain value
+			curCount = 0; // reset count for next neighbor
+		}
+	}
+
+	// separate keys and values of process_map
+	vector<int> vals;
+	for(map<int,int>::iterator it = process_map.begin(); it != process_map.end(); ++it)
+		vals.push_back(it->second);
+
+	// sort values
+	sort(vals.begin(), vals.end());
+
+	vector<int> retKeys; // get keys of values into a vector
+	vector<int> temp; // store all keys that have value we're searching for
+	
+	for(int i = 0; i < vals.size(); ++i)
+	{
+		int find = vals[i]; // get value to search for its key
+		for(map<int,int>::iterator it = process_map.begin(); it != process_map.end(); ++it)
+		{
+			if(find == it->second) // found value
+			{
+				temp.push_back(it->first);
+				it->second = -1; // mark this key/value as checked
+			}
+		}
+		// check for ties
+		while(temp.size() > 0)
+		{
+			// find min in temp
+			vector<int>::iterator min = min_element(temp.begin(), temp.end());
+			retKeys.push_back(*min);
+			temp.erase(min);
+		}
+	}
+
+	return retKeys;
 }
 
 /**
