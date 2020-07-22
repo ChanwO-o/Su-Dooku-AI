@@ -142,9 +142,256 @@ pair<map<Variable*,Domain>,bool> BTSolver::forwardChecking ( void )
  *		 the whole NorvigCheck propagation, and mapped to the values that they were assigned. 
  *		 The bool is true if assignment is consistent, false otherwise.
  */
+
+/*
 pair<map<Variable*,int>,bool> BTSolver::norvigCheck ( void )
 {
-	return make_pair(map<Variable*, int>(), false);
+	pair<map<Variable*,int>,bool> retPair;
+	
+	// step (1) copied from Part 1 forwardChecking() function.
+	for(Variable* v : network.getVariables()) // get variables
+	{
+		if(v->isAssigned()) // check if assigned
+		{
+			int check = v->getAssignment(); // get assignment
+			ConstraintNetwork::VariableSet neighbors = network.getNeighborsOfVariable(v); // get neighbors
+
+			for(Variable* neighbor : neighbors) // loop through neighbors
+			{
+				//int j = 0;
+				//while(neighbor->getDomain().size() > 0 && !(neighbor->isAssigned()))
+				//{
+					if(neighbor->getDomain().contains(check)) // check if neighbor domain value == assignment
+					{
+						trail->push(neighbor); // trail.push neighbor variables before changing their domain
+						neighbor->removeValueFromDomain(check); // remove value from domain
+						//break; // get next neighbor
+					}
+					//++j;
+					//if(j == neighbor->getDomain().size())
+						//break;
+				//}
+			}
+		}
+	}
+
+
+	for(Constraint c : network.getConstraints()) // get constraints
+	{
+		vector<int> domainVec = {0,0,0,0,0,0,0,0,0}; // keep track of [1,9] domain values
+
+		// marks seen
+		for(Variable* v: c.vars)
+		{
+			Domain::ValueSet domain = v->getDomain().getValues();
+			
+			for(int i = 0; i < domain.size(); ++i)
+				++domainVec[domain[i] - 1];	// increm domainVec index (val=1 is index 0, val=9 is index 8, etc.)
+		}
+
+		// print
+		//for(int k = 0; k < domainVec.size(); ++k)
+			//cout << domainVec[k] << ", ";
+		//cout << "\n";
+
+		// find var and sets value
+		for(int i = 0; i < domainVec.size(); ++i)
+		{
+			if(domainVec[i] == 1)
+			{
+				int val = i + 1; // val to assign is vec index+1
+
+				for(Variable* var : c.vars)
+				{
+					Domain::ValueSet domainVar = var->getDomain().getValues();
+
+					for(int j = 0; j < domainVar.size(); ++j)
+					{
+						if(domainVar[j] == val)
+						{
+							cout << "up\n";
+							trail->push(var); // trail.push variable before changing their domain
+							var->removeValueFromDomain(val);
+							var->assignValue(val);
+							retPair.first[var] = val;
+							//cout << "made it here\n";
+
+						}
+					}
+				}
+			}
+		}
+	}
+	//cout << "here\n";
+
+	retPair.second = network.isConsistent();
+	return retPair;
+}
+*/
+/*
+pair<map<Variable*,int>,bool> BTSolver::norvigCheck ( void )
+{
+	pair<map<Variable*,int>,bool> retPair;
+	
+	// step (1) copied from Part 1 forwardChecking() function.
+	for(Variable* v : network.getVariables()) // get variables
+	{
+		if(v->isAssigned()) // check if assigned
+		{
+			int check = v->getAssignment(); // get assignment
+			ConstraintNetwork::VariableSet neighbors = network.getNeighborsOfVariable(v); // get neighbors
+
+			for(Variable* neighbor : neighbors) // loop through neighbors
+			{
+			    if(neighbor->getDomain().contains(check)) // check if neighbor domain value == assignment
+                {
+                    trail->push(neighbor); // trail.push neighbor variables before changing their domain
+                    neighbor->removeValueFromDomain(check); // remove value from domain
+                }
+                v->setModified(false);
+			}
+		}
+	}
+
+
+	for(Constraint c : network.getConstraints()) // get constraints
+	{
+		vector<int> domainVec = {0,0,0,0,0,0,0,0,0}; // keep track of [1,9] domain values
+
+		// marks seen
+		for(Variable* v: c.vars)
+		{
+			Domain::ValueSet domain = v->getDomain().getValues();
+			
+			for(int i = 0; i < domain.size(); ++i)
+				++domainVec[domain[i] - 1];	// increm domainVec index (val=1 is index 0, val=9 is index 8, etc.)
+		}
+
+		// print
+		//for(int k = 0; k < domainVec.size(); ++k)
+		//	cout << domainVec[k] << ", ";
+		//cout << "\n";
+
+		// find var and sets value
+		for(int i = 0; i < domainVec.size(); ++i)
+		{
+			if(domainVec[i] == 1)
+			{
+				int val = i + 1; // val to assign is vec index+1
+
+				for(Variable* var : c.vars)
+				{
+					if(var->getDomain().contains(val))
+					{
+						trail->push(var); // trail.push variable before changing their domain
+						var->removeValueFromDomain(val);
+						var->assignValue(val);
+						//retPair.first.insert({var, val});
+						//ptr = mp.insert( pair<char, int>('a', 20) ); 
+						//retPair.first.insert(pair<Variable*, int>(var, val));
+						retPair.first.insert(pair<Variable*, int>(var, val));
+					}
+				}
+			}
+		}
+	}
+
+	retPair.second = network.isConsistent();
+	return retPair;
+}
+*/
+pair<map<Variable*,int>,bool> BTSolver::norvigCheck ( void )
+{
+	pair<map<Variable*, int>, bool> retPair;
+
+	// step (1) copied from Part 1 forwardChecking() function.
+	/*
+	for(Variable* v : network.getVariables()) // get variables
+	{
+		if(v->isAssigned()) // check if assigned
+		{
+			int check = v->getAssignment(); // get assignment
+			ConstraintNetwork::VariableSet neighbors = network.getNeighborsOfVariable(v); // get neighbors
+
+			for(Variable* neighbor : neighbors) // loop through neighbors
+			{
+			    if(neighbor->getDomain().contains(check)) // check if neighbor domain value == assignment
+                {
+                    trail->push(neighbor); // trail.push neighbor variables before changing their domain
+                    neighbor->removeValueFromDomain(check); // remove value from domain
+                }
+                v->setModified(false);
+			}
+		}
+	}
+	*/
+
+	for(Variable* v : network.getVariables()) // get variables
+	{
+		if(v->isAssigned()) // check if assigned
+		{
+			int check = v->getAssignment(); // get assignment
+			ConstraintNetwork::VariableSet neighbors = network.getNeighborsOfVariable(v); // get neighbors
+
+			for(Variable* neighbor : neighbors) // loop through neighbors
+			{
+				int j = 0;
+				while(neighbor->getDomain().size() > 0 && !(neighbor->isAssigned()))
+				{
+					if(neighbor->getDomain().getValues()[j] == check) // check if neighbor domain value == assignment
+					{
+						trail->push(neighbor); // trail.push neighbor variables before changing their domain
+						neighbor->removeValueFromDomain(check); // remove value from domain
+						break; // get next neighbor
+					}
+					++j;
+					if(j == neighbor->getDomain().size())
+						break;
+				}
+			}
+		}
+	}
+
+	//map<Variable*, int> myMap;
+
+	for(Constraint c : network.getConstraints()) // get variables
+	{
+		vector<int> domainVec = {0,0,0,0,0,0,0,0,0};
+
+		for(Variable* v : c.vars) // c.vars
+		{
+			Domain::ValueSet domain = v->getDomain().getValues();
+			
+			for(int i = 0; i < domain.size(); ++i)
+				++domainVec[domain[i] - 1];
+		}
+
+		for(int i = 0; i < domainVec.size(); ++i)
+		{
+			if(domainVec[i] == 1)
+			{
+				int val = i + 1;
+				for(Variable* var : c.vars)
+				{
+					if(!var->isAssigned())
+					{
+						if(var->getDomain().contains(val))
+						{
+							trail->push(var);
+							var->assignValue(val);
+							//myMap.insert(pair<Variable*,int>(var, val));
+							retPair.first.insert(pair<Variable*,int>(var, val));
+						}
+					}
+				}
+			}
+		}
+	}
+
+	//retPair.first = myMap;
+	retPair.second = network.isConsistent();
+
+	return retPair;
 }
 
 /**
@@ -203,7 +450,75 @@ Variable* BTSolver::getMRV ( void )
  */
 vector<Variable*> BTSolver::MRVwithTieBreaker ( void )
 {
-	return vector<Variable*>();
+	vector<Variable*> retVec;
+	
+	// find minDomainSize
+	int minDomainSize = 9;
+	for(Variable* v : network.getVariables())
+	{
+		if(!v->isAssigned())
+		{
+			int domainSize = v->getDomain().size();
+			if(domainSize < minDomainSize)
+				minDomainSize = domainSize;
+		}
+	}
+
+	// find all Variable* of size minDomainSize
+	// push all to vector<Variable*> minVars
+	vector<Variable*> minVars;
+	for(Variable* v : network.getVariables())
+	{
+		if(!v->isAssigned())
+		{
+			if(v->getDomain().size() == minDomainSize)
+				minVars.push_back(v);
+		}
+	}
+
+	if(minVars.size() > 1)
+	{
+		// scroll through vector<Variable*> minVars
+		// find numAffectedNeighbors for each Variable*
+		// push (Variable*, numAffectedNeighbors) to map<Variable*, int>
+		map<Variable*, int> maxAffecting;
+		for(int i = 0; i < minVars.size(); ++i)
+		{
+			Domain::ValueSet domain = minVars[i]->getDomain().getValues();
+			int numAffectedNeighbors = 0;
+				
+			for(int j = 0; j < domain.size(); ++j)
+			{
+				char val = domain[j];
+				for(Variable* neighbor : network.getNeighborsOfVariable(minVars[i]))
+				{
+					if(neighbor->getDomain().contains(val))
+					{
+						++numAffectedNeighbors;
+					}
+				}
+			}
+			maxAffecting.insert(pair<Variable*, int>(minVars[i], numAffectedNeighbors));
+		}
+
+		// iterate through map, find maxAffect for mapValue->second
+		// iterate through map and assigValue() to Variables* with affect=max
+		int maxAffect = 0;
+		for(map<Variable*, int>::iterator iter = maxAffecting.begin(); iter != maxAffecting.end(); ++iter)
+		{
+			if(iter->second > maxAffect)
+				maxAffect = iter->second;
+		}
+		for(map<Variable*, int>::iterator iter = maxAffecting.begin(); iter != maxAffecting.end(); ++iter)
+		{
+			if(iter->second == maxAffect)
+				retVec.push_back(iter->first);
+		}
+	}
+	else
+		retVec.push_back(minVars[0]);
+
+	return retVec;
 }
 
 /**
