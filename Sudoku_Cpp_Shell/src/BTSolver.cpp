@@ -453,7 +453,7 @@ vector<Variable*> BTSolver::MRVwithTieBreaker ( void )
 	vector<Variable*> retVec;
 	
 	// find minDomainSize
-	int minDomainSize = 9;
+	int minDomainSize = 100;
 	for(Variable* v : network.getVariables())
 	{
 		if(!v->isAssigned())
