@@ -244,39 +244,47 @@ vector<int> BTSolver::getValuesInOrder ( Variable* v )
  */
 vector<int> BTSolver::getValuesLCVOrder ( Variable* v )
 {
-	vector<int> values = v->getDomain().getValues(); // domain values
+	// size(), getDomain(), getValues()
+	vector<int> values = v->getDomain().getValues();
 	ConstraintNetwork::VariableSet neighbors = network.getNeighborsOfVariable(v);
 
-	map<int,int> process_map; // pair (domain value : affected neighbors count)
+	map<int,int> process_map;
 
-	for(int i = 0; i < values.size(); ++i)
+	int curCount = 0;
+	for(int i = 0; i < v->getDomain().getValues().size(); ++i)
 	{ 
 		int check = values[i]; // grab a value from domain of given square
-		int curCount = 0; // count number of neighbors affected for this domain value
 		
 		for(Variable* neighbor : neighbors) // grabs neighbor domain and checks constraints
 		{
-			for(int neiCheck : neighbor->getDomain().getValues())
+			for(int j = 0; j < neighbor->getDomain().getValues().size(); ++j)
 			{
-				if(check == neiCheck) // neighbor has current domain in its domain
+				int neiCheck = neighbor->getDomain().getValues()[j];
+				if(check == neiCheck)
+				{
 					++curCount;
+				}
 			}
-			process_map[check] = process_map[check] + curCount; // increment affected neighbors count for this domain value
-			curCount = 0; // reset count for next neighbor
+			process_map[check] = process_map[check] + curCount;
+			curCount = 0;
 		}
 	}
 
 	// separate keys and values of process_map
 	vector<int> vals;
+	vector<int> keys;
 	for(map<int,int>::iterator it = process_map.begin(); it != process_map.end(); ++it)
+	{
+		keys.push_back(it->first);
 		vals.push_back(it->second);
+	}
 
 	// sort values
 	sort(vals.begin(), vals.end());
 
-	vector<int> retKeys; // get keys of values into a vector
-	vector<int> temp; // store all keys that have value we're searching for
-	
+	// get keys of values into a vector
+	vector<int> retKeys;
+	vector<int> temp;
 	for(int i = 0; i < vals.size(); ++i)
 	{
 		int find = vals[i]; // get value to search for its key
@@ -285,13 +293,15 @@ vector<int> BTSolver::getValuesLCVOrder ( Variable* v )
 			if(find == it->second) // found value
 			{
 				temp.push_back(it->first);
-				it->second = -1; // mark this key/value as checked
+				//remove it->first, it->second
+				it->second = -1;
 			}
 		}
 		// check for ties
 		while(temp.size() > 0)
 		{
 			// find min in temp
+			//int* min = min_element(temp.begin(), temp.end());
 			vector<int>::iterator min = min_element(temp.begin(), temp.end());
 			retKeys.push_back(*min);
 			temp.erase(min);
