@@ -102,26 +102,16 @@ pair<map<Variable*,Domain>,bool> BTSolver::forwardChecking ( void )
 
 			for(Variable* neighbor : neighbors) // loop through neighbors
 			{
-				int j = 0;
-				while(neighbor->getDomain().size() > 0 && !(neighbor->isAssigned()))
+				if(neighbor->getDomain().contains(check))
 				{
-					if(neighbor->getDomain().getValues()[j] == check) // check if neighbor domain value == assignment
-					{
-						trail->push(neighbor); // trail.push neighbor variables before changing their domain
-						neighbor->removeValueFromDomain(check); // remove value from domain
-						retPair.first[neighbor] = neighbor->getDomain();
-						break; // get next neighbor
-					}
-					++j;
-					if(j == neighbor->getDomain().size())
-						break;
+					trail->push(neighbor);
+					neighbor->removeValueFromDomain(check);
+					retPair.first[neighbor] = neighbor->getDomain();
 				}
 			}
 		}
 	}
-
 	retPair.second = network.isConsistent();
-
 	return retPair;
 }
 
@@ -148,7 +138,6 @@ pair<map<Variable*,int>,bool> BTSolver::norvigCheck ( void )
 	pair<map<Variable*, int>, bool> retPair;
 
 	// step (1) copied from Part 1 forwardChecking() function.
-	/*
 	for(Variable* v : network.getVariables()) // get variables
 	{
 		if(v->isAssigned()) // check if assigned
@@ -158,44 +147,14 @@ pair<map<Variable*,int>,bool> BTSolver::norvigCheck ( void )
 
 			for(Variable* neighbor : neighbors) // loop through neighbors
 			{
-			    if(neighbor->getDomain().contains(check)) // check if neighbor domain value == assignment
-                {
-                    trail->push(neighbor); // trail.push neighbor variables before changing their domain
-                    neighbor->removeValueFromDomain(check); // remove value from domain
-                }
-                v->setModified(false);
-			}
-		}
-	}
-	*/
-
-	for(Variable* v : network.getVariables()) // get variables
-	{
-		if(v->isAssigned()) // check if assigned
-		{
-			int check = v->getAssignment(); // get assignment
-			ConstraintNetwork::VariableSet neighbors = network.getNeighborsOfVariable(v); // get neighbors
-
-			for(Variable* neighbor : neighbors) // loop through neighbors
-			{
-				int j = 0;
-				while(neighbor->getDomain().size() > 0 && !(neighbor->isAssigned()))
+				if(neighbor->getDomain().contains(check))
 				{
-					if(neighbor->getDomain().getValues()[j] == check) // check if neighbor domain value == assignment
-					{
-						trail->push(neighbor); // trail.push neighbor variables before changing their domain
-						neighbor->removeValueFromDomain(check); // remove value from domain
-						break; // get next neighbor
-					}
-					++j;
-					if(j == neighbor->getDomain().size())
-						break;
+					trail->push(neighbor);
+					neighbor->removeValueFromDomain(check);
 				}
 			}
 		}
 	}
-
-	//map<Variable*, int> myMap;
 
 	for(Constraint c : network.getConstraints()) // get ConstraintSet
 	{
