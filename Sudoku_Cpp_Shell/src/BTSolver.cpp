@@ -159,7 +159,6 @@ pair<map<Variable*,int>,bool> BTSolver::norvigCheck ( void )
 	for(Constraint c : network.getConstraints()) // get ConstraintSet
 	{
 		int N = sudokuGrid.get_n();
-		//N = N * N;
 		vector<int> domainVec = {0,0,0,0,0,0,0,0,0}; // track domain value occurence
 		map<int, int> domainMap;
 		for(int i = 1; i <= N; ++i)
@@ -170,17 +169,13 @@ pair<map<Variable*,int>,bool> BTSolver::norvigCheck ( void )
 		for(Variable* v : c.vars) // iter vars in ConstraintSet
 		{
 			Domain::ValueSet domain = v->getDomain().getValues(); // get domain of Variable*
-			
 			for(int i = 0; i < domain.size(); ++i) // count visited domain values
 			{
-				//++domainVec[domain[i] - 1];
 				++domainMap[domain[i]];
 			}
 		}
 
-		//for(int i = 0; i < domainVec.size(); ++i) // iter through visited domain values
-		int i = 1;
-		//for(map<int, int>::iterator iter = domainMap.begin(); iter != domainMap.end(); ++iter, ++i)
+		// iter through visited domain values
 		for(int i = 1; i <= N; ++i)
 		{
 			if(domainMap[i] == 1) // if a domain value was visited only once
@@ -194,7 +189,6 @@ pair<map<Variable*,int>,bool> BTSolver::norvigCheck ( void )
 						{
 							trail->push(var);
 							var->assignValue(val); // assign the unique domain value
-							//myMap.insert(pair<Variable*,int>(var, val));
 							retPair.first.insert(pair<Variable*,int>(var, val));
 						}
 					}
@@ -202,8 +196,6 @@ pair<map<Variable*,int>,bool> BTSolver::norvigCheck ( void )
 			}
 		}
 	}
-
-	//retPair.first = myMap;
 	retPair.second = network.isConsistent();
 
 	return retPair;
